@@ -51,7 +51,7 @@ def process(image_directory, image_file_name):
             cv2.fillPoly(threshold, [cnt], color=(0,0,0))
 
     # Second contouring
-    img_blur_contour = gaussianblur(threshold,9)
+    img_blur_contour = gaussianblur(threshold, 9)
     fill_contour = cv2.findContours(img_blur_contour, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)[0]
     detected_object = []
     index = 1
@@ -59,9 +59,14 @@ def process(image_directory, image_file_name):
         area = cv2.contourArea(cnt)
         if area > OBJECT_LOW_BOUND_SIZE and area < high_bound:
             fill_contour, y, w, h = cv2.boundingRect(cnt)
-            corners = len(cv2.approxPolyDP(cnt, 0.025 * cv2.arcLength(cnt, True), True))
-            obj = ImageObject([fill_contour, y, w, h], index,area)
-            obj.corner = corners
+            corners = len(cv2.approxPolyDP(cnt, 6.7, True))
+            hull = cv2.convexHull(cnt)
+            corners_hull = len(cv2.approxPolyDP(hull, 6.5, True))
+            obj = ImageObject([fill_contour, y, w, h], index,area,cnt)
+            if corners == corners_hull:
+                obj.corner = corners
+            else:
+                obj.corner = -1
             detected_object.append(obj)
             index += 1
 
@@ -97,16 +102,15 @@ def process(image_directory, image_file_name):
                         (255, 0, 0), 2)
             hexagon_shape += 1
         elif object.corner == 8:
-            cv2.putText(img, "Circle", (object.postion[0] + 30, object.postion[1] - 5), cv2.FONT_HERSHEY_PLAIN, 1,
-                        (255, 0, 0), 2)
-            circle_shape+= 1
+                cv2.putText(img, "Circle", (object.postion[0] + 30, object.postion[1] - 5), cv2.FONT_HERSHEY_PLAIN, 1,
+                            (255, 0, 0), 2)
+                circle_shape+= 1
         else:
             cv2.putText(img, "Undefined Shape", (object.postion[0] + 30, object.postion[1] - 5), cv2.FONT_HERSHEY_PLAIN, 1,
                         (255, 0, 0), 2)
             others_shape += 1
 
     detected_object.sort(key=lambda object: object.area)
-
     cv2.imshow(image_file_name, img)
     print(f'\n\n\n------ {image_file_name} stats ------')
     print(f'The number of objects in the scene is : {len(detected_object)}')
