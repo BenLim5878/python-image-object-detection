@@ -7,6 +7,7 @@ from image_processing import *
 TARGET_IMAGE_SIZE = 540
 OBJECT_UPP_BOUND_SCREEN_SIZE = 0.8
 OBJECT_LOW_BOUND_SIZE = 800
+SQUARE_WIDTH_HEIGHT_THRESHOLD = 0.15
 
 # Macros
 def load_image(image_directory,image_file_name):
@@ -15,14 +16,20 @@ def load_image(image_directory,image_file_name):
 def process(image_directory, image_file_name):
     # Load image
     img = load_image(image_directory,image_file_name)
+
+    backSub =  cv2.createBackgroundSubtractorKNN()
+    fgMask = backSub.apply(img)
+
     # Scale image
     img = scale(img, TARGET_IMAGE_SIZE)
     # Add border to the scaled image
     img = addborder(img, 100)
     # Denoise image
     img_denoised = denoise(img, 15)
+    # Sharpen image
+    img_sharpen = sharpen(img_denoised)
     # Grayscale image
-    img_gray = gray(img_denoised)
+    img_gray = gray(img_sharpen)
     # Gaussian Blur image
     img_blur = gaussianblur(img_gray,5)
     # Threshold
@@ -60,6 +67,7 @@ def process(image_directory, image_file_name):
 
     triangular_shape = 0
     rectangle_shape = 0
+    square_shape = 0
     pentagon_shape = 0
     hexagon_shape = 0
     circle_shape = 0
@@ -72,8 +80,14 @@ def process(image_directory, image_file_name):
             cv2.putText(img,"Triangle", (object.postion[0] + 30, object.postion[1] - 5), cv2.FONT_HERSHEY_PLAIN, 1,(255, 0, 0), 2)
             triangular_shape += 1
         elif object.corner == 4:
-            cv2.putText(img, "Rectangle", (object.postion[0] + 30, object.postion[1] - 5), cv2.FONT_HERSHEY_PLAIN, 1,(255, 0, 0), 2)
-            rectangle_shape += 1
+            widthHeightRatio = object.postion[2] / object.postion[3]
+            if (widthHeightRatio > (1 - SQUARE_WIDTH_HEIGHT_THRESHOLD) and widthHeightRatio < (1 + SQUARE_WIDTH_HEIGHT_THRESHOLD)):
+                cv2.putText(img, "Square", (object.postion[0] + 30, object.postion[1] - 5), cv2.FONT_HERSHEY_PLAIN,
+                            1, (255, 0, 0), 2)
+                square_shape += 1
+            else:
+                cv2.putText(img, "Rectangle", (object.postion[0] + 30, object.postion[1] - 5), cv2.FONT_HERSHEY_PLAIN, 1,(255, 0, 0), 2)
+                rectangle_shape += 1
         elif object.corner == 5:
             cv2.putText(img, "Pentagon", (object.postion[0] + 30, object.postion[1] - 5), cv2.FONT_HERSHEY_PLAIN, 1,
                         (255, 0, 0), 2)
@@ -100,6 +114,7 @@ def process(image_directory, image_file_name):
     print(f'The largest object in the scene is : {detected_object[-1].id}')
     print(f'The number of triangular-like object in the scene is : {triangular_shape}')
     print(f'The number of rectangle-like object in the scene is : {rectangle_shape}')
+    print(f'The number of square-like object in the scene is : {square_shape}')
     print(f'The number of hexagon-like object in the scene is : {hexagon_shape}')
     print(f'The number of circle-like object in the scene is : {circle_shape}')
     print(f'The number of object are unidentified with the shape is : {others_shape}')

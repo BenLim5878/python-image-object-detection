@@ -48,3 +48,10 @@ def denoise(img, denoise_val):
 def histogramEQ(img):
     img_eq = cv2.equalizeHist(img)
     return img_eq
+
+def sharpen(img):
+    kernel_sharpening = np.array([[-1, -1, -1],
+                                  [-1, 9, -1],
+                                  [-1, -1, -1]])
+    img_sharpen = cv2.filter2D(img, -1, kernel_sharpening)
+    return img_sharpen
