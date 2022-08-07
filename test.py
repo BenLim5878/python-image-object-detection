@@ -12,3 +12,4 @@ process(IMAGE_DIRECTORY, "image7.jpg")
 process(IMAGE_DIRECTORY, "image8.jpg")
 process(IMAGE_DIRECTORY, "image9.jpg")
 process(IMAGE_DIRECTORY, "image10.jpg")
+

@@ -2,12 +2,15 @@ import cv2
 import numpy as np
 from image_object import ImageObject
 from image_processing import *
+import math
 
 # Parameters
 TARGET_IMAGE_SIZE = 540
 OBJECT_UPP_BOUND_SCREEN_SIZE = 0.8
 OBJECT_LOW_BOUND_SIZE = 800
 SQUARE_WIDTH_HEIGHT_THRESHOLD = 0.15
+CIRCLE_WIDTH_HEIGHT_THRESHOLD = 0.15
+CIRCLE_RATIO_MATCH_THRESHOLD = 0.15
 
 # Macros
 def load_image(image_directory,image_file_name):
@@ -101,14 +104,20 @@ def process(image_directory, image_file_name):
             cv2.putText(img, "Hexagon", (object.postion[0] + 30, object.postion[1] - 5), cv2.FONT_HERSHEY_PLAIN, 1,
                         (255, 0, 0), 2)
             hexagon_shape += 1
-        elif object.corner == 8:
+        else:
+            objectArea = object.area
+            circleRadius = object.postion[2]/2
+            circleArea = math.pi * (circleRadius)**2
+            circleMatchRatio = objectArea/ circleArea
+            widthHeightRatio = object.postion[2] / object.postion[3]
+            if (circleMatchRatio > (1-CIRCLE_RATIO_MATCH_THRESHOLD) and circleMatchRatio < (1+CIRCLE_RATIO_MATCH_THRESHOLD) and widthHeightRatio > (1 - CIRCLE_WIDTH_HEIGHT_THRESHOLD) and widthHeightRatio < (1 + CIRCLE_WIDTH_HEIGHT_THRESHOLD)):
                 cv2.putText(img, "Circle", (object.postion[0] + 30, object.postion[1] - 5), cv2.FONT_HERSHEY_PLAIN, 1,
                             (255, 0, 0), 2)
-                circle_shape+= 1
-        else:
-            cv2.putText(img, "Undefined Shape", (object.postion[0] + 30, object.postion[1] - 5), cv2.FONT_HERSHEY_PLAIN, 1,
-                        (255, 0, 0), 2)
-            others_shape += 1
+                circle_shape += 1
+            else:
+                cv2.putText(img, "Undefined Shape", (object.postion[0] + 30, object.postion[1] - 5), cv2.FONT_HERSHEY_PLAIN, 1,
+                            (255, 0, 0), 2)
+                others_shape += 1
 
     detected_object.sort(key=lambda object: object.area)
     cv2.imshow(image_file_name, img)
