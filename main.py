@@ -19,10 +19,6 @@ def load_image(image_directory,image_file_name):
 def process(image_directory, image_file_name):
     # Load image
     img = load_image(image_directory,image_file_name)
-
-    backSub =  cv2.createBackgroundSubtractorKNN()
-    fgMask = backSub.apply(img)
-
     # Scale image
     img = scale(img, TARGET_IMAGE_SIZE)
     # Add border to the scaled image
@@ -105,6 +101,7 @@ def process(image_directory, image_file_name):
                         (255, 0, 0), 2)
             hexagon_shape += 1
         else:
+            # Check if the shape is circle
             objectArea = object.area
             circleRadius = object.postion[2]/2
             circleArea = math.pi * (circleRadius)**2
